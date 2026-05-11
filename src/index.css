@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-brand-bg text-brand-text font-dm antialiased;
+    min-height: 100dvh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sora;
+  }
+
+  #root {
+    min-height: 100dvh;
+    width: 100%;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+}
+
+@layer components {
+  .glass {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .glass-hover {
+    @apply glass transition-all duration-200;
+  }
+  .glass-hover:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+
+  .glow-violet {
+    box-shadow: 0 0 40px rgba(124, 110, 255, 0.25);
+  }
+  .glow-green {
+    box-shadow: 0 0 40px rgba(47, 255, 160, 0.15);
+  }
+
+  .gradient-text {
+    background: linear-gradient(90deg, #7C6EFF, #2FFFA0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .btn-primary {
+    @apply bg-brand-violet hover:bg-brand-violet/90 text-white font-dm font-medium px-6 py-3 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer;
+  }
+  .btn-ghost {
+    @apply border border-white/20 hover:border-white/40 text-brand-text font-dm font-medium px-6 py-3 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer;
+  }
+
+  .input-base {
+    @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-brand-text placeholder-brand-muted focus:outline-none focus:border-brand-violet/60 transition-all duration-200 font-dm text-sm;
+  }
+
+  .card {
+    @apply glass rounded-2xl p-5;
+  }
+
+  .skeleton {
+    @apply bg-white/5 rounded-lg animate-pulse;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
