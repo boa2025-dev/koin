@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import AppLayout from './components/layout/AppLayout'
 import ProtectedRoute from './components/layout/ProtectedRoute'
+import AddTransactionSheet from './components/ui/AddTransactionSheet'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
@@ -15,6 +16,18 @@ import AppSettings from './pages/app/AppSettings'
 export default function App() {
   return (
     <BrowserRouter>
+      {/* SVG filter for liquid-glass backdrop refraction */}
+      <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden>
+        <defs>
+          <filter id="liquid-glass" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="2" seed="7" result="n" />
+            <feGaussianBlur in="n" stdDeviation="2" result="sn" />
+            <feDisplacementMap in="SourceGraphic" in2="sn" scale="14" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+      </svg>
+
+      <AddTransactionSheet />
       <Toaster
         position="top-right"
         toastOptions={{
