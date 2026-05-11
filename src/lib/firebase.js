@@ -12,6 +12,14 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
+if (!firebaseConfig.apiKey) {
+  console.error(
+    '[UniSpend] Faltan variables de entorno de Firebase.\n' +
+    'Agregalas en Vercel: Settings → Environment Variables.\n' +
+    'Localmente: completá el archivo .env.local'
+  )
+}
+
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
