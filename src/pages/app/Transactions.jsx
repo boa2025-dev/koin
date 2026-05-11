@@ -1,8 +1,6 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Search, Filter, Trash2, Edit3, X, Camera, ChevronDown } from 'lucide-react'
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { storage } from '../../lib/firebase'
+import { Plus, Search, Trash2, Edit3, X, ChevronDown } from 'lucide-react'
 import { Timestamp } from 'firebase/firestore'
 import { useAuth } from '../../services/auth'
 import { useTransactions, addTransaction, updateTransaction, deleteTransaction } from '../../services/transactions'
@@ -23,7 +21,6 @@ const emptyForm = {
   type: 'expense',
   date: new Date().toISOString().slice(0, 10),
   notes: '',
-  receiptFile: null,
 }
 
 export default function Transactions() {
@@ -41,7 +38,6 @@ export default function Transactions() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
-  const fileRef = useRef()
 
   const catMap = useMemo(() =>
     Object.fromEntries(categories.map(c => [c.id, c])), [categories])
@@ -74,7 +70,6 @@ export default function Transactions() {
       type: tx.type || 'expense',
       date: d.toISOString().slice(0, 10),
       notes: tx.notes || '',
-      receiptFile: null,
     })
     setModalOpen(true)
   }
@@ -88,13 +83,6 @@ export default function Transactions() {
     }
     setSaving(true)
     try {
-      let receiptUrl = editing?.receiptUrl ?? ''
-      if (form.receiptFile) {
-        const path = `receipts/${user.uid}/${Date.now()}_${form.receiptFile.name}`
-        const snap = await uploadBytes(storageRef(storage, path), form.receiptFile)
-        receiptUrl = await getDownloadURL(snap.ref)
-      }
-
       const data = {
         amount: parseFloat(form.amount),
         description: form.description,
@@ -103,7 +91,6 @@ export default function Transactions() {
         type: form.type,
         date: Timestamp.fromDate(new Date(form.date + 'T12:00:00')),
         notes: form.notes,
-        receiptUrl,
       }
 
       if (editing) {
@@ -360,26 +347,6 @@ export default function Transactions() {
               rows={2}
               className="input-base resize-none text-sm"
             />
-          </div>
-
-          {/* Receipt upload */}
-          <div>
-            <label className="text-brand-muted text-xs mb-2 block">Foto del ticket</label>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={e => update('receiptFile', e.target.files[0] || null)}
-            />
-            <button
-              type="button"
-              onClick={() => fileRef.current.click()}
-              className="btn-ghost text-sm py-2.5 px-4 flex items-center gap-2 w-full justify-center"
-            >
-              <Camera size={15} />
-              {form.receiptFile ? form.receiptFile.name : 'Subir imagen'}
-            </button>
           </div>
 
           {/* Actions */}
