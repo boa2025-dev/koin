@@ -46,7 +46,7 @@ export default function Sidebar() {
               exit={{ opacity: 0, x: -10 }}
               className="font-sora font-bold text-brand-text text-base whitespace-nowrap"
             >
-              UniSpend
+              ikoin
             </motion.span>
           )}
         </AnimatePresence>

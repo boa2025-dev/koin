@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'UniSpend',
-        short_name: 'UniSpend',
+        name: 'ikoin',
+        short_name: 'ikoin',
         description: 'Tu app financiera universitaria',
         theme_color: '#080B14',
         background_color: '#080B14',

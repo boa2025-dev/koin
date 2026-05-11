@@ -59,7 +59,7 @@ export default function Onboarding() {
         color: data.walletColor,
       })
       await seedDefaultCategories(user.uid)
-      toast.success('¡Todo listo! Bienvenido a UniSpend.')
+      toast.success('¡Todo listo! Bienvenido a ikoin.')
       navigate('/app/dashboard')
     } catch {
       toast.error('Hubo un error. Intentá de nuevo.')
@@ -157,7 +157,7 @@ export default function Onboarding() {
           <div className="w-8 h-8 rounded-xl bg-brand-violet flex items-center justify-center">
             <PieChart size={16} className="text-white" />
           </div>
-          <span className="font-sora font-bold text-brand-text">UniSpend</span>
+          <span className="font-sora font-bold text-brand-text">ikoin</span>
         </div>
 
         {/* Step indicators */}

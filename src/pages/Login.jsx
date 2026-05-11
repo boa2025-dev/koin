@@ -95,7 +95,7 @@ export default function Login() {
           <div className="w-8 h-8 rounded-xl bg-brand-violet flex items-center justify-center">
             <PieChart size={16} className="text-white" />
           </div>
-          <span className="font-sora font-bold text-brand-text">UniSpend</span>
+          <span className="font-sora font-bold text-brand-text">ikoin</span>
         </Link>
 
         <div className="glass rounded-2xl p-7">

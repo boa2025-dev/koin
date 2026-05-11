@@ -82,7 +82,7 @@ export default function Landing() {
           <div className="w-7 h-7 rounded-lg bg-brand-violet flex items-center justify-center">
             <PieChart size={14} className="text-white" />
           </div>
-          <span className="font-sora font-bold text-brand-text text-base">UniSpend</span>
+          <span className="font-sora font-bold text-brand-text text-base">ikoin</span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm text-brand-muted">
           <a href="#features" className="hover:text-brand-text transition-colors">Funciones</a>
@@ -373,11 +373,11 @@ export default function Landing() {
             <div className="w-6 h-6 rounded-lg bg-brand-violet flex items-center justify-center">
               <PieChart size={12} className="text-white" />
             </div>
-            <span className="font-sora font-bold text-sm">UniSpend</span>
+            <span className="font-sora font-bold text-sm">ikoin</span>
             <span className="text-brand-muted text-xs ml-2">La app financiera universitaria</span>
           </div>
           <p className="text-brand-muted text-xs">
-            © 2026 UniSpend. Todos los derechos reservados.
+            © 2026 ikoin. Todos los derechos reservados.
           </p>
         </div>
       </footer>

@@ -12,7 +12,7 @@ const firebaseConfig = {
 
 if (!firebaseConfig.apiKey) {
   console.error(
-    '[UniSpend] Faltan variables de entorno de Firebase.\n' +
+    '[ikoin] Faltan variables de entorno de Firebase.\n' +
     'Agregalas en Vercel: Settings → Environment Variables.\n' +
     'Localmente: completá el archivo .env.local'
   )
