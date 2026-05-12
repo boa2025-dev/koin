@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Suspense, lazy } from 'react'
 import {
   Zap, PieChart, Target, BarChart2, Users, Bell,
   ArrowRight, CheckCircle2, TrendingDown, Eye,
 } from 'lucide-react'
+import { useAuth } from '../services/auth'
 
 const HeroScene = lazy(() => import('../components/landing/HeroScene'))
 
@@ -74,6 +75,18 @@ const steps = [
 ]
 
 export default function Landing() {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-dvh bg-brand-bg">
+        <div className="w-7 h-7 border-2 border-brand-violet border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (user) return <Navigate to="/app/dashboard" replace />
+
   return (
     <div className="min-h-dvh bg-brand-bg text-brand-text font-dm overflow-x-hidden">
       {/* Navbar */}
