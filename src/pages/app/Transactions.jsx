@@ -5,7 +5,7 @@ import { Timestamp } from 'firebase/firestore'
 import { useAuth } from '../../services/auth'
 import { useTransactions, addTransaction, updateTransaction, deleteTransaction } from '../../services/transactions'
 import { useCategories } from '../../services/categories'
-import { useWallets } from '../../services/wallets'
+import { useWallets, adjustWalletBalance } from '../../services/wallets'
 import useFormatCurrency from '../../hooks/useFormatCurrency'
 import CategoryIcon from '../../components/ui/CategoryIcon'
 import Modal from '../../components/ui/Modal'
@@ -13,9 +13,15 @@ import ConfirmModal from '../../components/ui/ConfirmModal'
 import { SkeletonRow } from '../../components/ui/Skeleton'
 import toast from 'react-hot-toast'
 
+const fmtPreview = (val) => {
+  const n = parseFloat(val)
+  if (!val || isNaN(n)) return ''
+  return new Intl.NumberFormat('es-AR').format(n)
+}
+
 const emptyForm = {
-  amount: '', description: '', categoryId: '', walletId: '',
-  type: 'expense', date: new Date().toISOString().slice(0, 10), notes: '',
+  amount: '', categoryId: '', walletId: '',
+  type: 'expense', date: new Date().toISOString().slice(0, 10),
 }
 
 const today = new Date()
@@ -254,7 +260,6 @@ export default function Transactions() {
   const filtered = useMemo(() => {
     let t = transactions
     if (search) t = t.filter(tx =>
-      tx.description?.toLowerCase().includes(search.toLowerCase()) ||
       catMap[tx.categoryId]?.name.toLowerCase().includes(search.toLowerCase())
     )
     if (filterCat) t = t.filter(tx => tx.categoryId === filterCat)
@@ -262,34 +267,67 @@ export default function Transactions() {
     return t
   }, [transactions, search, filterCat, filterType, catMap])
 
+  const expenseCats = useMemo(() => categories.filter(c => !c.type || c.type === 'expense'), [categories])
+  const incomeCats  = useMemo(() => categories.filter(c => c.type === 'income'), [categories])
+  const shownCats   = form.type === 'income' ? incomeCats : expenseCats
+
   const openNew = () => { setEditing(null); setForm(emptyForm); setModalOpen(true) }
 
   const openEdit = (tx) => {
     setEditing(tx)
     const d = tx.date?.toDate ? tx.date.toDate() : new Date(tx.date)
-    setForm({ amount: String(tx.amount), description: tx.description || '', categoryId: tx.categoryId || '',
-      walletId: tx.walletId || '', type: tx.type || 'expense', date: d.toISOString().slice(0, 10), notes: tx.notes || '' })
+    setForm({ amount: String(tx.amount), categoryId: tx.categoryId || '',
+      walletId: tx.walletId || '', type: tx.type || 'expense', date: d.toISOString().slice(0, 10) })
     setModalOpen(true)
   }
 
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  const setType = (t) => setForm(f => ({ ...f, type: t, categoryId: '' }))
 
   const handleSave = async () => {
     if (!form.amount || !form.categoryId) { toast.error('Completá el monto y la categoría.'); return }
+    const amount = parseFloat(form.amount)
     setSaving(true)
     try {
-      const data = { amount: parseFloat(form.amount), description: form.description, categoryId: form.categoryId,
-        walletId: form.walletId, type: form.type, date: Timestamp.fromDate(new Date(form.date + 'T12:00:00')), notes: form.notes }
-      if (editing) { await updateTransaction(user.uid, editing.id, data); toast.success('Transacción actualizada.') }
-      else { await addTransaction(user.uid, data); toast.success('Transacción agregada.') }
+      const data = { amount, categoryId: form.categoryId, walletId: form.walletId,
+        type: form.type, date: Timestamp.fromDate(new Date(form.date + 'T12:00:00')) }
+
+      if (editing) {
+        // Reverse old wallet effect, apply new one
+        if (editing.walletId) {
+          const oldDelta = editing.type === 'income' ? -editing.amount : editing.amount
+          await adjustWalletBalance(user.uid, editing.walletId, oldDelta)
+        }
+        await updateTransaction(user.uid, editing.id, data)
+        if (form.walletId) {
+          const newDelta = form.type === 'income' ? amount : -amount
+          await adjustWalletBalance(user.uid, form.walletId, newDelta)
+        }
+        toast.success('Transacción actualizada.')
+      } else {
+        await addTransaction(user.uid, data)
+        if (form.walletId) {
+          const delta = form.type === 'income' ? amount : -amount
+          await adjustWalletBalance(user.uid, form.walletId, delta)
+        }
+        toast.success('Transacción agregada.')
+      }
       setModalOpen(false)
     } catch { toast.error('Error al guardar.') }
     finally { setSaving(false) }
   }
 
   const handleDelete = async (id) => {
-    try { await deleteTransaction(user.uid, id); toast.success('Eliminada.') }
-    catch { toast.error('Error al eliminar.') }
+    try {
+      const tx = transactions.find(t => t.id === id)
+      await deleteTransaction(user.uid, id)
+      // Reverse the wallet effect
+      if (tx?.walletId) {
+        const delta = tx.type === 'income' ? -tx.amount : tx.amount
+        await adjustWalletBalance(user.uid, tx.walletId, delta)
+      }
+      toast.success('Eliminada.')
+    } catch { toast.error('Error al eliminar.') }
   }
 
   const sharedProps = { filtered, loading, catMap, format, onEdit: openEdit, onDelete: setDeleteId, search, setSearch, filterType, setFilterType }
@@ -306,36 +344,52 @@ export default function Transactions() {
       {/* Edit modal (desktop + mobile) */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar transacción' : 'Nueva transacción'}>
         <div className="space-y-4">
+          {/* Type — resets category on switch */}
           <div className="flex bg-white/[0.04] rounded-xl p-1">
             {['expense','income'].map(t => (
-              <button key={t} onClick={() => upd('type', t)}
+              <button key={t} onClick={() => setType(t)}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                   form.type === t ? (t==='expense' ? 'bg-red-500/80 text-white' : 'bg-brand-green/80 text-brand-bg') : 'text-brand-muted'
                 }`}>{t === 'expense' ? '↓ Gasto' : '↑ Ingreso'}</button>
             ))}
           </div>
-          <input type="number" value={form.amount} onChange={e => upd('amount', e.target.value)} placeholder="0.00" className="input-base text-lg font-sora font-bold" autoFocus />
-          <input value={form.description} onChange={e => upd('description', e.target.value)} placeholder="Descripción" className="input-base" />
+
+          {/* Amount with formatted preview */}
+          <div>
+            <input type="number" value={form.amount} onChange={e => upd('amount', e.target.value)}
+              placeholder="0" className="input-base text-lg font-sora font-bold" autoFocus inputMode="decimal" />
+            {form.amount !== '' && (
+              <p className="text-brand-muted text-xs mt-1 text-right font-sora">= {fmtPreview(form.amount)}</p>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
+            {/* Category filtered by type */}
             <div className="relative">
-              <select value={form.categoryId} onChange={e => upd('categoryId', e.target.value)} className="input-base appearance-none cursor-pointer pr-8 text-sm">
+              <select value={form.categoryId} onChange={e => upd('categoryId', e.target.value)}
+                className="input-base appearance-none cursor-pointer pr-8 text-sm">
                 <option value="">Categoría</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {shownCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               <ChevronDown size={13} className="absolute right-3 bottom-3.5 text-brand-muted pointer-events-none" />
             </div>
             <div className="relative">
-              <select value={form.walletId} onChange={e => upd('walletId', e.target.value)} className="input-base appearance-none cursor-pointer pr-8 text-sm">
+              <select value={form.walletId} onChange={e => upd('walletId', e.target.value)}
+                className="input-base appearance-none cursor-pointer pr-8 text-sm">
                 <option value="">Billetera</option>
                 {wallets.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
               </select>
               <ChevronDown size={13} className="absolute right-3 bottom-3.5 text-brand-muted pointer-events-none" />
             </div>
           </div>
-          <input type="date" value={form.date} onChange={e => upd('date', e.target.value)} className="input-base text-sm [color-scheme:dark]" />
+
+          <input type="date" value={form.date} onChange={e => upd('date', e.target.value)}
+            className="input-base text-sm [color-scheme:dark]" />
+
           <div className="flex gap-3 pt-1">
             <button onClick={() => setModalOpen(false)} className="btn-ghost flex-1 py-2.5 text-sm">Cancelar</button>
-            <button onClick={handleSave} disabled={saving} className="btn-primary flex-1 py-2.5 text-sm flex items-center justify-center gap-2 disabled:opacity-60">
+            <button onClick={handleSave} disabled={saving}
+              className="btn-primary flex-1 py-2.5 text-sm flex items-center justify-center gap-2 disabled:opacity-60">
               {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               {editing ? 'Guardar' : 'Agregar'}
             </button>

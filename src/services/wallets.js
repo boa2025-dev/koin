@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   collection, addDoc, updateDoc, deleteDoc,
-  doc, onSnapshot, orderBy, query,
+  doc, onSnapshot, orderBy, query, increment,
 } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 
@@ -16,6 +16,12 @@ export const updateWallet = (uid, id, data) =>
 
 export const deleteWallet = (uid, id) =>
   deleteDoc(doc(db, 'users', uid, 'wallets', id))
+
+// Adjusts wallet balance atomically (positive = add, negative = subtract)
+export const adjustWalletBalance = (uid, walletId, delta) =>
+  updateDoc(doc(db, 'users', uid, 'wallets', walletId), {
+    balance: increment(delta),
+  })
 
 export const useWallets = (uid) => {
   const [wallets, setWallets] = useState([])
