@@ -181,7 +181,7 @@ function MobileDashboard({ userDoc, format, transactions, categories, wallets, l
   const initials = (userDoc?.name ?? '?').charAt(0).toUpperCase()
 
   return (
-    <div className="px-5 pt-4 pb-36 space-y-4">
+    <div className="px-5 pt-safe-page pb-safe-page space-y-4">
       {/* Header */}
       <motion.div {...fadeUp(0)} className="flex items-center justify-between">
         <div>

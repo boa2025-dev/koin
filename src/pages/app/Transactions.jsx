@@ -46,7 +46,7 @@ function MobileTransactions({ filtered, loading, catMap, format, onEdit, onDelet
   const currentMonthName = today.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
 
   return (
-    <div className="px-5 pt-4 pb-36 space-y-4">
+    <div className="px-5 pt-safe-page pb-safe-page space-y-4">
       {/* Header */}
       <div>
         <h1 className="font-sora font-bold text-[26px] tracking-tight text-brand-text" style={{ letterSpacing: '-0.6px' }}>

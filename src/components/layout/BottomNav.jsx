@@ -39,7 +39,7 @@ export default function BottomNav() {
   const openAddTx = useAppStore(s => s.openAddTx)
 
   return (
-    <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 flex items-end justify-center gap-2.5 px-3 pb-[18px] pt-2 pointer-events-none">
+    <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 flex items-end justify-center gap-2.5 px-3 pb-safe-nav pt-2 pointer-events-none">
       {/* Glass tab bar */}
       <div className="flex-1 max-w-[320px] h-16 rounded-full relative overflow-hidden pointer-events-auto">
         <div className="absolute inset-0 rounded-full" style={glassBar} />

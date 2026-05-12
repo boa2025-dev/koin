@@ -24,7 +24,7 @@ function MobileGoals({ goals, loading, format, onAdd, onContrib, onDelete }) {
   const openAddTx    = useAppStore(s => s.openAddTx)
 
   return (
-    <div className="px-5 pt-4 pb-36 space-y-4">
+    <div className="px-5 pt-safe-page pb-safe-page space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-sora font-bold text-[26px] tracking-tight text-brand-text" style={{ letterSpacing: '-0.6px' }}>Metas</h1>
