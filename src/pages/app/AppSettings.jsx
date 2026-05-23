@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { User, Wallet, Palette, Globe, Trash2, Plus, ChevronDown, LogOut } from 'lucide-react'
+import { User, Wallet, Trash2, Plus, ChevronDown, LogOut, Edit3 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../services/auth'
 import { logOut } from '../../services/auth'
@@ -162,9 +162,9 @@ export default function AppSettings() {
               <div className="w-3 h-3 rounded-full shrink-0" style={{ background: w.color }} />
               <span className="text-brand-text text-sm flex-1">{w.name}</span>
               <span className="text-brand-muted text-xs font-sora">${w.balance?.toLocaleString('es-AR') ?? 0}</span>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex gap-1">
                 <button onClick={() => openEditWallet(w)} className="p-1 rounded hover:bg-white/10 text-brand-muted hover:text-brand-text transition-colors">
-                  <User size={12} />
+                  <Edit3 size={12} />
                 </button>
                 <button onClick={() => setDeleteWalletId(w.id)} className="p-1 rounded hover:bg-red-500/10 text-brand-muted hover:text-red-400 transition-colors">
                   <Trash2 size={12} />

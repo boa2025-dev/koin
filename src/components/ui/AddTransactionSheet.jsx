@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronDown } from 'lucide-react'
 import { Timestamp } from 'firebase/firestore'
@@ -31,6 +31,7 @@ export default function AddTransactionSheet() {
   const [form, setForm] = useState(empty)
   const [saving, setSaving] = useState(false)
   const [seeded, setSeeded] = useState(false)
+  const amountRef = useRef(null)
 
   // Ensure income categories exist for existing users
   useEffect(() => {
@@ -38,6 +39,14 @@ export default function AddTransactionSheet() {
       ensureIncomeCategories(user.uid, categories).then(() => setSeeded(true))
     }
   }, [addTxOpen, user, categories, seeded])
+
+  // Focus amount input after sheet animation completes
+  useEffect(() => {
+    if (addTxOpen) {
+      const t = setTimeout(() => amountRef.current?.focus(), 320)
+      return () => clearTimeout(t)
+    }
+  }, [addTxOpen])
 
   const expenseCats = useMemo(() => categories.filter(c => !c.type || c.type === 'expense'), [categories])
   const incomeCats  = useMemo(() => categories.filter(c => c.type === 'income'), [categories])
@@ -133,13 +142,13 @@ export default function AddTransactionSheet() {
               <div>
                 <p className="text-brand-muted text-xs mb-1.5">Monto *</p>
                 <input
+                  ref={amountRef}
                   type="number"
                   value={form.amount}
                   onChange={e => set('amount', e.target.value)}
                   placeholder="0"
                   className="input-base text-2xl font-sora font-bold tracking-tight"
                   inputMode="decimal"
-                  autoFocus
                 />
                 {form.amount !== '' && (
                   <p className="text-brand-muted text-xs mt-1 text-right font-sora">

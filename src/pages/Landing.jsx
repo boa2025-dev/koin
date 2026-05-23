@@ -51,14 +51,16 @@ const features = [
   {
     icon: Users,
     title: 'Gastos compartidos',
-    desc: 'Próximamente: dividí gastos con compañeros de piso.',
+    desc: 'Dividí gastos con compañeros de piso.',
     size: 'col-span-1 row-span-1',
+    comingSoon: true,
   },
   {
     icon: Bell,
     title: 'Recordatorios inteligentes',
     desc: 'Te avisamos cuando estás por pasarte del presupuesto.',
     size: 'col-span-1 row-span-1',
+    comingSoon: true,
   },
 ]
 
@@ -234,13 +236,19 @@ export default function Landing() {
           </motion.h2>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 auto-rows-[160px]">
-            {features.map(({ icon: Icon, title, desc, size }, i) => (
+            {features.map(({ icon: Icon, title, desc, size, comingSoon }, i) => (
               <motion.div
                 key={title}
                 variants={fadeUp}
                 custom={i + 2}
-                className={`glass-hover rounded-2xl p-5 flex flex-col justify-between ${size}`}
+                className={`glass-hover rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden ${size} ${comingSoon ? 'opacity-60' : ''}`}
               >
+                {comingSoon && (
+                  <span className="absolute top-3 right-3 text-[9px] font-semibold font-dm uppercase tracking-widest px-2 py-0.5 rounded-full"
+                    style={{ background: 'rgba(124,110,255,0.18)', color: '#7C6EFF', border: '1px solid rgba(124,110,255,0.3)' }}>
+                    Próximamente
+                  </span>
+                )}
                 <div className="w-9 h-9 rounded-xl bg-brand-violet/15 flex items-center justify-center">
                   <Icon size={18} className="text-brand-violet" />
                 </div>

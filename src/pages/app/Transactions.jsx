@@ -34,7 +34,7 @@ const dayLabel = (d) => {
 }
 
 // ─── Mobile view ─────────────────────────────────────────────────────────────
-function MobileTransactions({ filtered, loading, catMap, format, onEdit, onDelete, search, setSearch, filterType, setFilterType }) {
+function MobileTransactions({ filtered, loading, catMap, walletMap, format, onEdit, onDelete, search, setSearch, filterType, setFilterType }) {
   const [showFilters, setShowFilters] = useState(false)
 
   const grouped = useMemo(() => {
@@ -150,7 +150,7 @@ function MobileTransactions({ filtered, loading, catMap, format, onEdit, onDelet
                     <span className={`font-sora font-semibold text-[11px] ${tx.type === 'income' ? 'text-brand-green' : 'text-brand-text'}`}>
                       {tx.type === 'income' ? '+' : '−'}{format(tx.amount)}
                     </span>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1">
                       <button onClick={() => onEdit(tx)} className="p-1 rounded-lg hover:bg-white/10 text-brand-muted hover:text-brand-text">
                         <Edit3 size={12} />
                       </button>
@@ -256,16 +256,21 @@ export default function Transactions() {
   const [deleteId, setDeleteId] = useState(null)
 
   const catMap = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
+  const walletMap = useMemo(() => Object.fromEntries(wallets.map(w => [w.id, w])), [wallets])
 
   const filtered = useMemo(() => {
     let t = transactions
-    if (search) t = t.filter(tx =>
-      catMap[tx.categoryId]?.name.toLowerCase().includes(search.toLowerCase())
-    )
+    if (search) {
+      const q = search.toLowerCase()
+      t = t.filter(tx =>
+        catMap[tx.categoryId]?.name.toLowerCase().includes(q) ||
+        walletMap[tx.walletId]?.name.toLowerCase().includes(q)
+      )
+    }
     if (filterCat) t = t.filter(tx => tx.categoryId === filterCat)
     if (filterType) t = t.filter(tx => tx.type === filterType)
     return t
-  }, [transactions, search, filterCat, filterType, catMap])
+  }, [transactions, search, filterCat, filterType, catMap, walletMap])
 
   const expenseCats = useMemo(() => categories.filter(c => !c.type || c.type === 'expense'), [categories])
   const incomeCats  = useMemo(() => categories.filter(c => c.type === 'income'), [categories])
@@ -330,7 +335,7 @@ export default function Transactions() {
     } catch { toast.error('Error al eliminar.') }
   }
 
-  const sharedProps = { filtered, loading, catMap, format, onEdit: openEdit, onDelete: setDeleteId, search, setSearch, filterType, setFilterType }
+  const sharedProps = { filtered, loading, catMap, walletMap, format, onEdit: openEdit, onDelete: setDeleteId, search, setSearch, filterType, setFilterType }
 
   return (
     <>

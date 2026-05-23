@@ -3,7 +3,8 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts'
-import { ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Zap } from 'lucide-react'
+import { ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Zap, Wallet } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../services/auth'
 import { useTransactions } from '../../services/transactions'
 import { useCategories } from '../../services/categories'
@@ -196,6 +197,24 @@ function MobileAnalytics({ year, month, setYear, setMonth, transactions, categor
           </p>
         </div>
       )}
+
+      {/* Budget shortcut */}
+      <Link
+        to="/app/budgets"
+        className="flex items-center justify-between px-4 py-3 rounded-[18px]"
+        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(124,110,255,0.16)', color: '#7C6EFF' }}>
+            <Wallet size={15} />
+          </div>
+          <div>
+            <p className="font-sora font-semibold text-[12px] text-brand-text">Presupuestos</p>
+            <p className="text-brand-muted text-[10px]">Control mensual por categoría</p>
+          </div>
+        </div>
+        <ChevronRight size={15} className="text-brand-muted" />
+      </Link>
     </div>
   )
 }

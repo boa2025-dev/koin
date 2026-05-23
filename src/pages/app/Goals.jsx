@@ -14,6 +14,12 @@ import toast from 'react-hot-toast'
 
 const EMOJIS = ['🎯','📱','✈️','🏔️','🛡️','🎓','🏠','🚗','💻','🎵','📚','💎']
 
+const fmtPreview = (val) => {
+  const n = parseFloat(val)
+  if (!val || isNaN(n)) return ''
+  return new Intl.NumberFormat('es-AR').format(n)
+}
+
 const emptyForm = { name: '', targetAmount: '', deadline: '', description: '', emoji: '🎯' }
 
 // ─── Mobile Goals ──────────────────────────────────────────────────────────
@@ -127,7 +133,7 @@ function MobileGoals({ goals, loading, format, onAdd, onContrib, onDelete }) {
 
                   <button
                     onClick={() => onDelete(goal.id)}
-                    className="p-1 rounded-lg hover:bg-red-500/10 text-brand-muted hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                    className="p-1 rounded-lg hover:bg-red-500/10 text-brand-muted hover:text-red-400 transition-colors shrink-0"
                   >
                     <Trash2 size={13} />
                   </button>
@@ -348,7 +354,12 @@ export default function Goals() {
               <p className="text-brand-muted text-xs mt-0.5">{format(contribModal.currentAmount)} / {format(contribModal.targetAmount)}</p>
             </div>
           )}
-          <input type="number" value={contribAmount} onChange={e => setContribAmount(e.target.value)} placeholder="0.00" className="input-base font-sora font-bold text-lg" autoFocus />
+          <div>
+            <input type="number" value={contribAmount} onChange={e => setContribAmount(e.target.value)} placeholder="0.00" className="input-base font-sora font-bold text-lg" autoFocus />
+            {contribAmount !== '' && (
+              <p className="text-brand-muted text-xs mt-1 text-right font-sora">= {fmtPreview(contribAmount)}</p>
+            )}
+          </div>
           <div className="flex gap-3">
             <button onClick={() => setContribModal(null)} className="btn-ghost flex-1 py-2.5 text-sm">Cancelar</button>
             <button onClick={handleContrib} disabled={saving || !contribAmount} className="btn-primary flex-1 py-2.5 text-sm flex items-center justify-center gap-2 disabled:opacity-60">

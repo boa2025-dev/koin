@@ -4,7 +4,7 @@ import useAppStore from '../../store/useAppStore'
 
 const tabs = [
   { to: '/app/dashboard',    icon: LayoutDashboard, label: 'Inicio' },
-  { to: '/app/transactions', icon: ArrowLeftRight,  label: 'Gastos' },
+  { to: '/app/transactions', icon: ArrowLeftRight,  label: 'Movimientos' },
   { to: '/app/goals',        icon: Target,          label: 'Metas' },
   { to: '/app/analytics',    icon: BarChart2,       label: 'Análisis' },
 ]

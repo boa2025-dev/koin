@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { Bell, ArrowUpRight, ArrowDownRight, ChevronRight } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useAuth } from '../../services/auth'
 import { useTransactions } from '../../services/transactions'
 import { useCategories } from '../../services/categories'
@@ -191,7 +192,10 @@ function MobileDashboard({ userDoc, format, transactions, categories, wallets, l
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center relative">
+          <button
+            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center relative"
+            onClick={() => toast('Notificaciones próximamente.', { icon: '🔔' })}
+          >
             <Bell size={15} className="text-white" />
           </button>
           <Link to="/app/settings"
