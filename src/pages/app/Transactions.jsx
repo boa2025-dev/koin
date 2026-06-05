@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { Search, Trash2, Edit3, X, ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { useState, useMemo, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Search, Trash2, Edit3, X, ChevronDown, SlidersHorizontal, Plus, Check } from 'lucide-react'
 import { Timestamp } from 'firebase/firestore'
 import { useAuth } from '../../services/auth'
 import { useTransactions, addTransaction, updateTransaction, deleteTransaction } from '../../services/transactions'
-import { useCategories } from '../../services/categories'
+import { useCategories, addCategory } from '../../services/categories'
 import { useWallets, adjustWalletBalance } from '../../services/wallets'
 import useFormatCurrency from '../../hooks/useFormatCurrency'
 import CategoryIcon from '../../components/ui/CategoryIcon'
@@ -255,6 +255,13 @@ export default function Transactions() {
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
 
+  // Quick-create category
+  const [newCatOpen, setNewCatOpen]     = useState(false)
+  const [newCatEmoji, setNewCatEmoji]   = useState('')
+  const [newCatName, setNewCatName]     = useState('')
+  const [savingNewCat, setSavingNewCat] = useState(false)
+  const newCatNameRef = useRef(null)
+
   const catMap = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
   const walletMap = useMemo(() => Object.fromEntries(wallets.map(w => [w.id, w])), [wallets])
 
@@ -276,7 +283,28 @@ export default function Transactions() {
   const incomeCats  = useMemo(() => categories.filter(c => c.type === 'income'), [categories])
   const shownCats   = form.type === 'income' ? incomeCats : expenseCats
 
-  const openNew = () => { setEditing(null); setForm(emptyForm); setModalOpen(true) }
+  const handleCreateCat = async () => {
+    if (!newCatName.trim()) { toast.error('Ingresá un nombre.'); return }
+    setSavingNewCat(true)
+    try {
+      const catData = {
+        name:      newCatName.trim(),
+        type:      form.type,
+        color:     form.type === 'expense' ? '#FF6B6B' : '#2FFFA0',
+        icon:      newCatEmoji || (form.type === 'expense' ? 'Utensils' : 'Briefcase'),
+        isDefault: false,
+      }
+      const ref = await addCategory(user.uid, catData)
+      upd('categoryId', ref.id)
+      setNewCatOpen(false)
+      setNewCatName('')
+      setNewCatEmoji('')
+      toast.success(`Categoría "${catData.name}" creada.`)
+    } catch { toast.error('Error al crear categoría.') }
+    finally { setSavingNewCat(false) }
+  }
+
+  const openNew = () => { setEditing(null); setForm(emptyForm); setNewCatOpen(false); setModalOpen(true) }
 
   const openEdit = (tx) => {
     setEditing(tx)
@@ -287,7 +315,7 @@ export default function Transactions() {
   }
 
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }))
-  const setType = (t) => setForm(f => ({ ...f, type: t, categoryId: '' }))
+  const setType = (t) => { setForm(f => ({ ...f, type: t, categoryId: '' })); setNewCatOpen(false); setNewCatName(''); setNewCatEmoji('') }
 
   const handleSave = async () => {
     if (!form.amount || !form.categoryId) { toast.error('Completá el monto y la categoría.'); return }
@@ -368,24 +396,72 @@ export default function Transactions() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {/* Category filtered by type */}
-            <div className="relative">
-              <select value={form.categoryId} onChange={e => upd('categoryId', e.target.value)}
-                className="input-base appearance-none cursor-pointer pr-8 text-sm">
-                <option value="">Categoría</option>
-                {shownCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <ChevronDown size={13} className="absolute right-3 bottom-3.5 text-brand-muted pointer-events-none" />
+          {/* Category row */}
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <select value={form.categoryId} onChange={e => { upd('categoryId', e.target.value); setNewCatOpen(false) }}
+                  className="input-base appearance-none cursor-pointer pr-8 text-sm w-full">
+                  <option value="">Categoría</option>
+                  {shownCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                <ChevronDown size={13} className="absolute right-3 bottom-3.5 text-brand-muted pointer-events-none" />
+              </div>
+              {/* + Nueva categoría */}
+              <button type="button"
+                onClick={() => { setNewCatOpen(o => !o); setTimeout(() => newCatNameRef.current?.focus(), 60) }}
+                title="Nueva categoría"
+                className="h-full px-3 rounded-xl text-xs font-semibold font-dm flex items-center gap-1 transition-all cursor-pointer shrink-0"
+                style={newCatOpen
+                  ? { background: 'rgba(124,110,255,0.18)', color: '#7C6EFF', border: '1px solid rgba(124,110,255,0.4)' }
+                  : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', border: '1px dashed rgba(255,255,255,0.15)' }
+                }
+              >
+                <Plus size={12} />
+                Nueva
+              </button>
             </div>
-            <div className="relative">
-              <select value={form.walletId} onChange={e => upd('walletId', e.target.value)}
-                className="input-base appearance-none cursor-pointer pr-8 text-sm">
-                <option value="">Billetera</option>
-                {wallets.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-              </select>
-              <ChevronDown size={13} className="absolute right-3 bottom-3.5 text-brand-muted pointer-events-none" />
-            </div>
+
+            {/* Inline quick-create */}
+            <AnimatePresence>
+              {newCatOpen && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.15 }} style={{ overflow: 'hidden' }}>
+                  <div className="flex gap-2 items-center p-2.5 rounded-xl"
+                    style={{ background: 'rgba(124,110,255,0.07)', border: '1px solid rgba(124,110,255,0.2)' }}>
+                    <input value={newCatEmoji} onChange={e => setNewCatEmoji([...e.target.value].slice(-1).join(''))}
+                      placeholder="😀" maxLength={4}
+                      className="w-10 h-9 text-center text-lg rounded-lg outline-none font-dm"
+                      style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#F0F0F5' }} />
+                    <input ref={newCatNameRef} value={newCatName} onChange={e => setNewCatName(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleCreateCat()}
+                      placeholder="Nombre de categoría…"
+                      className="flex-1 h-9 px-3 rounded-lg text-sm font-dm outline-none"
+                      style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#F0F0F5' }} />
+                    <button onClick={handleCreateCat} disabled={savingNewCat}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all disabled:opacity-50 cursor-pointer"
+                      style={{ background: 'rgba(124,110,255,0.3)', color: '#7C6EFF', border: '1px solid rgba(124,110,255,0.4)' }}>
+                      {savingNewCat ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Check size={13} strokeWidth={2.5} />}
+                    </button>
+                    <button onClick={() => { setNewCatOpen(false); setNewCatName(''); setNewCatEmoji('') }}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 cursor-pointer"
+                      style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <X size={13} />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Wallet */}
+          <div className="relative">
+            <select value={form.walletId} onChange={e => upd('walletId', e.target.value)}
+              className="input-base appearance-none cursor-pointer pr-8 text-sm w-full">
+              <option value="">Billetera</option>
+              {wallets.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+            </select>
+            <ChevronDown size={13} className="absolute right-3 bottom-3.5 text-brand-muted pointer-events-none" />
           </div>
 
           <input type="date" value={form.date} onChange={e => upd('date', e.target.value)}
