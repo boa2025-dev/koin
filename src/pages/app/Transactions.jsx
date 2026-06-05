@@ -21,7 +21,7 @@ const fmtPreview = (val) => {
 
 const emptyForm = {
   amount: '', categoryId: '', walletId: '',
-  type: 'expense', date: new Date().toISOString().slice(0, 10),
+  type: 'expense', date: new Date().toISOString().slice(0, 10), description: '',
 }
 
 const today = new Date()
@@ -315,7 +315,8 @@ export default function Transactions() {
     setEditing(tx)
     const d = tx.date?.toDate ? tx.date.toDate() : new Date(tx.date)
     setForm({ amount: String(tx.amount), categoryId: tx.categoryId || '',
-      walletId: tx.walletId || '', type: tx.type || 'expense', date: d.toISOString().slice(0, 10) })
+      walletId: tx.walletId || '', type: tx.type || 'expense', date: d.toISOString().slice(0, 10),
+      description: tx.description || '' })
     setModalOpen(true)
   }
 
@@ -328,7 +329,8 @@ export default function Transactions() {
     setSaving(true)
     try {
       const data = { amount, categoryId: form.categoryId, walletId: form.walletId,
-        type: form.type, date: Timestamp.fromDate(new Date(form.date + 'T12:00:00')) }
+        type: form.type, date: Timestamp.fromDate(new Date(form.date + 'T12:00:00')),
+        description: form.description.trim() }
 
       if (editing) {
         // Reverse old wallet effect, apply new one
@@ -473,6 +475,13 @@ export default function Transactions() {
             </select>
             <ChevronDown size={13} className="absolute right-3 bottom-3.5 text-brand-muted pointer-events-none" />
           </div>
+
+          <input
+            value={form.description}
+            onChange={e => upd('description', e.target.value)}
+            placeholder="Concepto (opcional)"
+            className="input-base text-sm"
+          />
 
           <input type="date" value={form.date} onChange={e => upd('date', e.target.value)}
             className="input-base text-sm [color-scheme:dark]" />

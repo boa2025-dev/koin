@@ -33,6 +33,7 @@ export default function AddTransactionSheet() {
   const [raw, setRaw]             = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [walletId, setWalletId]   = useState('')
+  const [description, setDescription] = useState('')
   const [saving, setSaving]       = useState(false)
   const [seeded, setSeeded]       = useState(false)
 
@@ -56,6 +57,7 @@ export default function AddTransactionSheet() {
       setRaw('')
       setCategoryId('')
       setType('expense')
+      setDescription('')
       setNewCatOpen(false)
       setNewCatName('')
       setNewCatEmoji('')
@@ -118,6 +120,7 @@ export default function AddTransactionSheet() {
     try {
       await addTransaction(user.uid, {
         amount, categoryId, walletId, type,
+        description: description.trim(),
         date: Timestamp.fromDate(new Date()),
       })
       if (walletId) {
@@ -297,11 +300,24 @@ export default function AddTransactionSheet() {
                 </div>
               )}
 
+              {/* Description (optional) */}
+              <input
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Concepto (opcional)"
+                className="w-full h-10 px-3.5 rounded-xl text-sm font-dm outline-none"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.09)',
+                  color: '#F0F0F5',
+                }}
+              />
+
               {/* Numeric keypad */}
               <div className="grid grid-cols-3 gap-2">
                 {KEYS.map(key => (
                   <button key={key}
-                    onPointerDown={(e) => { e.preventDefault(); pressKey(key) }}
+                    onPointerDown={(e) => { e.preventDefault(); document.activeElement?.blur(); pressKey(key) }}
                     className="h-[58px] rounded-2xl flex items-center justify-center font-sora font-semibold text-xl text-white select-none transition-transform active:scale-95"
                     style={{
                       background: key === 'del' ? 'rgba(255,107,107,0.08)' : 'rgba(255,255,255,0.07)',
