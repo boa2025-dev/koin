@@ -398,28 +398,26 @@ export default function Transactions() {
 
           {/* Category row */}
           <div className="space-y-2">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <select value={form.categoryId} onChange={e => { upd('categoryId', e.target.value); setNewCatOpen(false) }}
-                  className="input-base appearance-none cursor-pointer pr-8 text-sm w-full">
-                  <option value="">Categoría</option>
-                  {shownCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-                <ChevronDown size={13} className="absolute right-3 bottom-3.5 text-brand-muted pointer-events-none" />
-              </div>
-              {/* + Nueva categoría */}
-              <button type="button"
-                onClick={() => { setNewCatOpen(o => !o); setTimeout(() => newCatNameRef.current?.focus(), 60) }}
-                title="Nueva categoría"
-                className="h-full px-3 rounded-xl text-xs font-semibold font-dm flex items-center gap-1 transition-all cursor-pointer shrink-0"
-                style={newCatOpen
-                  ? { background: 'rgba(124,110,255,0.18)', color: '#7C6EFF', border: '1px solid rgba(124,110,255,0.4)' }
-                  : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', border: '1px dashed rgba(255,255,255,0.15)' }
-                }
+            <div className="relative">
+              <select
+                value={form.categoryId}
+                onChange={e => {
+                  if (e.target.value === '__new__') {
+                    setForm(f => ({ ...f, categoryId: '' }))
+                    setNewCatOpen(true)
+                    setTimeout(() => newCatNameRef.current?.focus(), 60)
+                  } else {
+                    upd('categoryId', e.target.value)
+                    setNewCatOpen(false)
+                  }
+                }}
+                className="input-base appearance-none cursor-pointer pr-8 text-sm w-full"
               >
-                <Plus size={12} />
-                Nueva
-              </button>
+                <option value="">Categoría</option>
+                {shownCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <option value="__new__">+ Nueva categoría…</option>
+              </select>
+              <ChevronDown size={13} className="absolute right-3 bottom-3.5 text-brand-muted pointer-events-none" />
             </div>
 
             {/* Inline quick-create */}
