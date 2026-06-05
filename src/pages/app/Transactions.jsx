@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Trash2, Edit3, X, ChevronDown, SlidersHorizontal, Plus, Check } from 'lucide-react'
+import { Search, Trash2, Edit3, X, ChevronDown, SlidersHorizontal, Plus } from 'lucide-react'
 import { Timestamp } from 'firebase/firestore'
 import { useAuth } from '../../services/auth'
 import { useTransactions, addTransaction, updateTransaction, deleteTransaction } from '../../services/transactions'
@@ -260,7 +260,9 @@ export default function Transactions() {
   const [newCatEmoji, setNewCatEmoji]   = useState('')
   const [newCatName, setNewCatName]     = useState('')
   const [savingNewCat, setSavingNewCat] = useState(false)
-  const newCatNameRef = useRef(null)
+  const newCatNameRef  = useRef(null)
+  const cancelCatRef   = useRef(false)
+  const creatingCatRef = useRef(false)
 
   const catMap = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories])
   const walletMap = useMemo(() => Object.fromEntries(wallets.map(w => [w.id, w])), [wallets])
@@ -284,11 +286,14 @@ export default function Transactions() {
   const shownCats   = form.type === 'income' ? incomeCats : expenseCats
 
   const handleCreateCat = async () => {
-    if (!newCatName.trim()) { toast.error('Ingresá un nombre.'); return }
+    if (creatingCatRef.current) return
+    const trimmed = newCatName.trim()
+    if (!trimmed) { setNewCatOpen(false); setNewCatEmoji(''); return }
+    creatingCatRef.current = true
     setSavingNewCat(true)
     try {
       const catData = {
-        name:      newCatName.trim(),
+        name:      trimmed,
         type:      form.type,
         color:     form.type === 'expense' ? '#FF6B6B' : '#2FFFA0',
         icon:      newCatEmoji || (form.type === 'expense' ? 'Utensils' : 'Briefcase'),
@@ -299,9 +304,9 @@ export default function Transactions() {
       setNewCatOpen(false)
       setNewCatName('')
       setNewCatEmoji('')
-      toast.success(`Categoría "${catData.name}" creada.`)
+      toast.success(`"${catData.name}" creada y seleccionada.`)
     } catch { toast.error('Error al crear categoría.') }
-    finally { setSavingNewCat(false) }
+    finally { setSavingNewCat(false); creatingCatRef.current = false }
   }
 
   const openNew = () => { setEditing(null); setForm(emptyForm); setNewCatOpen(false); setModalOpen(true) }
@@ -431,17 +436,24 @@ export default function Transactions() {
                       placeholder="😀" maxLength={4}
                       className="w-10 h-9 text-center text-lg rounded-lg outline-none font-dm"
                       style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#F0F0F5' }} />
-                    <input ref={newCatNameRef} value={newCatName} onChange={e => setNewCatName(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleCreateCat()}
-                      placeholder="Nombre de categoría…"
+                    <input
+                      ref={newCatNameRef}
+                      value={newCatName}
+                      onChange={e => setNewCatName(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCreateCat() } }}
+                      onBlur={() => {
+                        if (cancelCatRef.current) { cancelCatRef.current = false; return }
+                        handleCreateCat()
+                      }}
+                      placeholder="Nombre… (Enter para guardar)"
                       className="flex-1 h-9 px-3 rounded-lg text-sm font-dm outline-none"
                       style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#F0F0F5' }} />
-                    <button onClick={handleCreateCat} disabled={savingNewCat}
-                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all disabled:opacity-50 cursor-pointer"
-                      style={{ background: 'rgba(124,110,255,0.3)', color: '#7C6EFF', border: '1px solid rgba(124,110,255,0.4)' }}>
-                      {savingNewCat ? <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Check size={13} strokeWidth={2.5} />}
-                    </button>
-                    <button onClick={() => { setNewCatOpen(false); setNewCatName(''); setNewCatEmoji('') }}
+                    {savingNewCat && (
+                      <div className="w-4 h-4 border-2 border-brand-violet border-t-transparent rounded-full animate-spin shrink-0" />
+                    )}
+                    <button
+                      onPointerDown={() => { cancelCatRef.current = true }}
+                      onClick={() => { setNewCatOpen(false); setNewCatName(''); setNewCatEmoji('') }}
                       className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 cursor-pointer"
                       style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}>
                       <X size={13} />

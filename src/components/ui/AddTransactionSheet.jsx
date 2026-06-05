@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Timestamp } from 'firebase/firestore'
-import { Plus, X, Check } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { useAuth } from '../../services/auth'
 import { addTransaction } from '../../services/transactions'
 import { useCategories, addCategory, ensureIncomeCategories } from '../../services/categories'
@@ -41,7 +41,9 @@ export default function AddTransactionSheet() {
   const [newCatEmoji, setNewCatEmoji]   = useState('')
   const [newCatName, setNewCatName]     = useState('')
   const [savingNewCat, setSavingNewCat] = useState(false)
-  const nameInputRef = useRef(null)
+  const nameInputRef  = useRef(null)
+  const cancelCatRef  = useRef(false)
+  const creatingRef   = useRef(false)
 
   useEffect(() => {
     if (addTxOpen && user && categories.length > 0 && !seeded) {
@@ -85,11 +87,14 @@ export default function AddTransactionSheet() {
   }
 
   const handleCreateCat = async () => {
-    if (!newCatName.trim()) { toast.error('Ingresá un nombre.'); return }
+    if (creatingRef.current) return
+    const trimmed = newCatName.trim()
+    if (!trimmed) { setNewCatOpen(false); setNewCatEmoji(''); return }
+    creatingRef.current = true
     setSavingNewCat(true)
     try {
       const catData = {
-        name:      newCatName.trim(),
+        name:      trimmed,
         type,
         color:     type === 'expense' ? '#FF6B6B' : '#2FFFA0',
         icon:      newCatEmoji || (type === 'expense' ? 'Utensils' : 'Briefcase'),
@@ -100,9 +105,9 @@ export default function AddTransactionSheet() {
       setNewCatOpen(false)
       setNewCatName('')
       setNewCatEmoji('')
-      toast.success(`Categoría "${catData.name}" creada.`)
+      toast.success(`"${catData.name}" creada y seleccionada.`)
     } catch { toast.error('Error al crear categoría.') }
-    finally { setSavingNewCat(false) }
+    finally { setSavingNewCat(false); creatingRef.current = false }
   }
 
   const handleSave = async () => {
@@ -224,9 +229,9 @@ export default function AddTransactionSheet() {
               <AnimatePresence>
                 {newCatOpen && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                    animate={{ opacity: 1, height: 'auto', marginTop: 0 }}
-                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.18 }}
                     style={{ overflow: 'hidden' }}
                   >
@@ -238,39 +243,30 @@ export default function AddTransactionSheet() {
                         onChange={e => setNewCatEmoji(firstEmoji(e.target.value))}
                         placeholder="😀"
                         maxLength={4}
-                        className="w-11 h-10 text-center text-xl rounded-xl font-dm outline-none bg-transparent"
-                        style={{
-                          background: 'rgba(255,255,255,0.07)',
-                          border: '1px solid rgba(255,255,255,0.12)',
-                          color: '#F0F0F5',
-                        }}
+                        className="w-11 h-10 text-center text-xl rounded-xl font-dm outline-none"
+                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#F0F0F5' }}
                       />
-                      {/* Name input */}
+                      {/* Name input — auto-creates on Enter or blur */}
                       <input
                         ref={nameInputRef}
                         value={newCatName}
                         onChange={e => setNewCatName(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleCreateCat()}
-                        placeholder="Nombre de categoría..."
-                        className="flex-1 h-10 px-3 rounded-xl text-sm font-dm outline-none"
-                        style={{
-                          background: 'rgba(255,255,255,0.07)',
-                          border: '1px solid rgba(255,255,255,0.12)',
-                          color: '#F0F0F5',
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCreateCat() } }}
+                        onBlur={() => {
+                          if (cancelCatRef.current) { cancelCatRef.current = false; return }
+                          handleCreateCat()
                         }}
+                        placeholder="Nombre… (Enter para guardar)"
+                        className="flex-1 h-10 px-3 rounded-xl text-sm font-dm outline-none"
+                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#F0F0F5' }}
                       />
-                      {/* Confirm */}
-                      <button onPointerDown={e => e.preventDefault()} onClick={handleCreateCat}
-                        disabled={savingNewCat}
-                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all disabled:opacity-50"
-                        style={{ background: 'rgba(124,110,255,0.3)', color: '#7C6EFF', border: '1px solid rgba(124,110,255,0.4)' }}>
-                        {savingNewCat
-                          ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          : <Check size={14} strokeWidth={2.5} />
-                        }
-                      </button>
+                      {savingNewCat && (
+                        <div className="w-5 h-5 border-2 border-brand-violet border-t-transparent rounded-full animate-spin shrink-0" />
+                      )}
                       {/* Cancel */}
-                      <button onPointerDown={e => e.preventDefault()} onClick={() => { setNewCatOpen(false); setNewCatName(''); setNewCatEmoji('') }}
+                      <button
+                        onPointerDown={() => { cancelCatRef.current = true }}
+                        onClick={() => { setNewCatOpen(false); setNewCatName(''); setNewCatEmoji('') }}
                         className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                         style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}>
                         <X size={14} />

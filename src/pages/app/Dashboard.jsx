@@ -42,12 +42,9 @@ function DesktopDashboard({ userDoc, format, transactions, categories, wallets, 
 
   const totalSpent  = useMemo(() => monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0), [monthTx])
   const totalIncome = useMemo(() => monthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0), [monthTx])
-  const totalBalance = useMemo(() => {
-    const walletBal = wallets.reduce((s, w) => s + (w.balance || 0), 0)
-    const unwalletedDelta = transactions.filter(t => !t.walletId).reduce(
-      (s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0)
-    return walletBal + unwalletedDelta
-  }, [wallets, transactions])
+  const totalBalance = useMemo(() =>
+    transactions.reduce((s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0)
+  , [transactions])
 
   const byCategory = useMemo(() => {
     const map = {}
@@ -165,12 +162,9 @@ function MobileDashboard({ userDoc, format, transactions, categories, wallets, l
 
   const totalSpent  = useMemo(() => monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0), [monthTx])
   const totalIncome = useMemo(() => monthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0), [monthTx])
-  const totalBalance = useMemo(() => {
-    const walletBal = wallets.reduce((s, w) => s + (w.balance || 0), 0)
-    const unwalletedDelta = transactions.filter(t => !t.walletId).reduce(
-      (s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0)
-    return walletBal + unwalletedDelta
-  }, [wallets, transactions])
+  const totalBalance = useMemo(() =>
+    transactions.reduce((s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0)
+  , [transactions])
 
   // Last 7 days bar chart data
   const weekBars = useMemo(() => {
